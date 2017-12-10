@@ -6,9 +6,24 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration [DONE]
+
+// ======================= MY IMPLEMENTATION | START ======================= //
+
 // T = 30 * 0.1 = 3 seconds (can tune up later)
 size_t N_TIME_STEPS = 30; // unsigned integer
 double dt = 0.1;
+// For setting numeric limits
+// https://www.npr.org/sections/krulwich/2012/09/17/161096233/which-is-greater-the-number-of-sand-grains-on-earth-or-stars-in-the-sky
+const double SAND_PARTICLES_ON_EARTH = 7.5e18;
+// Steering angle limit, pre-calculate 25 degrees to radians
+const double STEERING_MAX_LIMIT = 0.436332;
+// Throttle limit
+const double THROTTLE_MAX_LIMIT = 1.0;
+// State variable and actuation variables
+const size_t N_STATE_VARS = 6;
+const size_t N_ACTUATION_VARS = 2;
+
+// ======================== MY IMPLEMENTATION | END ======================== //
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -163,8 +178,6 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
 
   // Six state variables, each will have N_TIME_STEPS time steps
   // Two actuation variables, each will have N_TIME_STEPS - 1 steps
-  const size_t N_STATE_VARS = 6;
-  const size_t N_ACTUATION_VARS = 2;
 
   // Total number of vars
   const size_t n_vars = N_STATE_VARS * N_TIME_STEPS + N_ACTUATION_VARS * (N_TIME_STEPS - 1);
@@ -197,7 +210,30 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
 
   Dvector vars_lowerbound(n_vars);
   Dvector vars_upperbound(n_vars);
-  // TODO: Set lower and upper limits for variables.
+  // TODO: Set lower and upper limits for variables [DONE]
+
+// ======================= MY IMPLEMENTATION | START ======================= //
+
+  // Need to set everything except for steering and throttle to large limits
+  for (int j = 0; j < delta_start_idx; ++j) {
+    // How about estimated number of sand particles on earth?
+    vars_lowerbound[j] = -SAND_PARTICLES_ON_EARTH;
+    vars_upperbound[j] = SAND_PARTICLES_ON_EARTH;
+  }
+
+  // Steering limits in radians (pre-calculated)
+  for (int k = delta_start_idx; k < a_start_idx; ++k) {
+    vars_lowerbound[k] = -STEERING_MAX_LIMIT;
+    vars_upperbound[k] = STEERING_MAX_LIMIT;
+  }
+
+  // Throttle limits
+  for (int l = a_start_idx; l < n_vars; ++l) {
+    vars_lowerbound[l] = -THROTTLE_MAX_LIMIT;
+    vars_upperbound[l] = THROTTLE_MAX_LIMIT;
+  }
+
+// ======================== MY IMPLEMENTATION | END ======================== //
 
   // Lower and upper limits for the constraints
   // Should be 0 besides initial state.
