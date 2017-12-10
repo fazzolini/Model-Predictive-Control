@@ -7,7 +7,7 @@ using CppAD::AD;
 
 // TODO: Set the timestep length and duration [DONE]
 // T = 30 * 0.1 = 3 seconds (can tune up later)
-size_t N = 30; // unsigned integer
+size_t N_TIME_STEPS = 30; // unsigned integer
 double dt = 0.1;
 
 // This value assumes the model presented in the classroom is used.
@@ -29,13 +29,13 @@ const double ref_v = 35; // can tune later
 
 // Initialize indices for convenient access into `fg` vector of cost constraints
 size_t x_start_idx = 0;
-size_t y_start_idx = x_start_idx + N;
-size_t psi_start_idx = y_start_idx + N;
-size_t v_start_idx = psi_start_idx + N;
-size_t cte_start_idx = v_start_idx + N;
-size_t psi_err_start_idx = cte_start_idx + N;
-size_t delta_start_idx = psi_err_start_idx + N;
-size_t a_start_idx = delta_start_idx + N - 1;
+size_t y_start_idx = x_start_idx + N_TIME_STEPS;
+size_t psi_start_idx = y_start_idx + N_TIME_STEPS;
+size_t v_start_idx = psi_start_idx + N_TIME_STEPS;
+size_t cte_start_idx = v_start_idx + N_TIME_STEPS;
+size_t psi_err_start_idx = cte_start_idx + N_TIME_STEPS;
+size_t delta_start_idx = psi_err_start_idx + N_TIME_STEPS;
+size_t a_start_idx = delta_start_idx + N_TIME_STEPS - 1;
 
 // ======================== MY IMPLEMENTATION | END ======================== //
 
@@ -60,7 +60,7 @@ class FG_eval {
     fg[0] = 0;
 
     // The part of the cost based on the reference state
-    for (int t = 0; t < N; t++) {
+    for (int t = 0; t < N_TIME_STEPS; t++) {
       // Penalize for cross-track error
       fg[0] += CppAD::pow(vars[cte_start_idx + t], 2);
       // Penalize for orientation angle
@@ -70,13 +70,13 @@ class FG_eval {
     }
 
     // Minimize the use of steering and throttle / brake
-    for (int t = 0; t < N - 1; t++) {
+    for (int t = 0; t < N_TIME_STEPS - 1; t++) {
       fg[0] += CppAD::pow(vars[delta_start_idx + t], 2);
       fg[0] += CppAD::pow(vars[a_start_idx + t], 2);
     }
 
     // Minimize fast changing of steering and throttle / brake
-    for (int t = 0; t < N - 2; t++) {
+    for (int t = 0; t < N_TIME_STEPS - 2; t++) {
       fg[0] += CppAD::pow(vars[delta_start_idx + t + 1] - vars[delta_start_idx + t], 2);
       fg[0] += CppAD::pow(vars[a_start_idx + t + 1] - vars[a_start_idx + t], 2);
     }
@@ -95,7 +95,7 @@ class FG_eval {
     fg[1 + psi_err_start_idx] = vars[psi_err_start_idx];
 
     // The rest of the constraints
-    for (int t = 1; t < N; t++) {
+    for (int t = 1; t < N_TIME_STEPS; t++) {
       // The state at time t+1
       // Retreive variables from vectors for convenience
       AD<double> x1 = vars[x_start_idx + t];
@@ -157,14 +157,35 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   size_t i;
   typedef CPPAD_TESTVECTOR(double) Dvector;
 
-  // TODO: Set the number of model variables (includes both states and inputs).
-  // For example: If the state is a 4 element vector, the actuators is a 2
-  // element vector and there are 10 timesteps. The number of variables is:
-  //
-  // 4 * 10 + 2 * 9
-  size_t n_vars = 0;
+  // TODO: Set the number of model variables (includes both states and inputs) [DONE]
+
+// ======================= MY IMPLEMENTATION | START ======================= //
+
+  // Six state variables, each will have N_TIME_STEPS time steps
+  // Two actuation variables, each will have N_TIME_STEPS - 1 steps
+  const size_t N_STATE_VARS = 6;
+  const size_t N_ACTUATION_VARS = 2;
+
+  // Total number of vars
+  const size_t n_vars = N_STATE_VARS * N_TIME_STEPS + N_ACTUATION_VARS * (N_TIME_STEPS - 1);
+
+  // For convenience, extract state variables
+  double x = state[0];
+  double y = state[1];
+  double psi = state[2];
+  double v = state[3];
+  double cte = state[4];
+  double psi_err = state[5];
+
+// ======================== MY IMPLEMENTATION | END ======================== //
+
   // TODO: Set the number of constraints
+
+// ======================= MY IMPLEMENTATION | START ======================= //
+
   size_t n_constraints = 0;
+
+// ======================== MY IMPLEMENTATION | END ======================== //
 
   // Initial value of the independent variables.
   // SHOULD BE 0 besides initial state.
