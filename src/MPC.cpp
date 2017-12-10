@@ -97,6 +97,7 @@ class FG_eval {
     // The rest of the constraints
     for (int t = 1; t < N; t++) {
       // The state at time t+1
+      // Retreive variables from vectors for convenience
       AD<double> x1 = vars[x_start_idx + t];
       AD<double> y1 = vars[y_start_idx + t];
       AD<double> psi1 = vars[psi_start_idx + t];
@@ -105,6 +106,7 @@ class FG_eval {
       AD<double> psi_err1 = vars[psi_err_start_idx + t];
 
       // The state at time t
+      // Retreive variables from vectors for convenience
       AD<double> x0 = vars[x_start_idx + t - 1];
       AD<double> y0 = vars[y_start_idx + t - 1];
       AD<double> psi0 = vars[psi_start_idx + t - 1];
@@ -117,8 +119,14 @@ class FG_eval {
       AD<double> a0 = vars[a_start_idx + t - 1];
 
       // Target path polynomial, calculate desired orientation
-      AD<double> f0 = coeffs[0] + coeffs[1] * x0;
-      AD<double> psi_des0 = CppAD::atan(coeffs[1]);
+      // 1. Pre-calculate for convenience
+      AD<double> x0_square = pow(x0, 2);
+      AD<double> x0_cube = pow(x0, 3);
+      // 2. Use 3rd degree polynomial
+      AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * x0_square + coeffs[3] * x0_cube;
+      // 3. Take atan of derivative of 3rd degree polynomial
+      AD<double> f0_prime = coeffs[1] + 2 * coeffs[2] * x0 + 3 * coeffs[3] * x0_square;
+      AD<double> psi_des0 = CppAD::atan(f0_prime);
 
       // Calculate next state according to kinematic model: [x, y, psi, v]
       fg[1 + x_start_idx + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * dt);
