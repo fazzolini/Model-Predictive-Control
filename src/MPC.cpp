@@ -244,6 +244,25 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
     constraints_upperbound[i] = 0;
   }
 
+// ======================= MY IMPLEMENTATION | START ======================= //
+
+  // Also need to set constraints lower and upper bounds to current values of state
+  constraints_lowerbound[x_start_idx] = x;
+  constraints_lowerbound[y_start_idx] = y;
+  constraints_lowerbound[psi_start_idx] = psi;
+  constraints_lowerbound[v_start_idx] = v;
+  constraints_lowerbound[cte_start_idx] = cte;
+  constraints_lowerbound[psi_err_start_idx] = psi_err;
+
+  constraints_upperbound[x_start_idx] = x;
+  constraints_upperbound[y_start_idx] = y;
+  constraints_upperbound[psi_start_idx] = psi;
+  constraints_upperbound[v_start_idx] = v;
+  constraints_upperbound[cte_start_idx] = cte;
+  constraints_upperbound[psi_err_start_idx] = psi_err;
+
+// ======================== MY IMPLEMENTATION | END ======================== //
+
   // object that computes objective and constraints
   FG_eval fg_eval(coeffs);
 
