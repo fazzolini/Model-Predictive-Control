@@ -12,10 +12,25 @@
 // for convenience
 using json = nlohmann::json;
 
+using namespace Eigen;
+
 // For converting back and forth between radians and degrees.
 constexpr double pi() { return M_PI; }
 double deg2rad(double x) { return x * pi() / 180; }
 double rad2deg(double x) { return x * 180 / pi(); }
+
+// ======================= MY IMPLEMENTATION | START ======================= //
+
+// Steering angle limit, pre-calculate 25 degrees to radians
+// To avoid recalculating each time
+const double STEERING_MAX_LIMIT = 0.436332;
+// Delay
+const size_t DELAY_MILLISECONDS = 100;
+const double DELAY_SECONDS = static_cast<double>(DELAY_MILLISECONDS) / 1000.0;
+// This is the length from front to CoG that has a similar radius.
+const double LF = 2.67;
+
+// ======================== MY IMPLEMENTATION | END ======================== //
 
 // Checks if the SocketIO event has JSON data.
 // If there is data the JSON object in string format will be returned,
@@ -87,19 +102,82 @@ int main() {
           // j[1] is the data JSON object
           vector<double> ptsx = j[1]["ptsx"];
           vector<double> ptsy = j[1]["ptsy"];
-          double px = j[1]["x"];
-          double py = j[1]["y"];
-          double psi = j[1]["psi"];
-          double v = j[1]["speed"];
+          const double px = j[1]["x"];
+          const double py = j[1]["y"];
+          const double psi = j[1]["psi"];
+          const double v = j[1]["speed"];
+          const double steering_angle = j[1]["steering_angle"];
+          const double throttle = j[1]["throttle"];
 
           /*
-          * TODO: Calculate steering angle and throttle using MPC.
+          * TODO: Calculate steering angle and throttle using MPC [DONE]
           *
           * Both are in between [-1, 1].
           *
           */
+
+// ======================= MY IMPLEMENTATION | START ======================= //
+
+          /**
+           * We have:
+           * 1) vectors of waypoints ptsx and ptsy
+           * 2) current current state of car in global coordinates
+           * We want:
+           * 1) optimal set of control inputs
+           * Solution approach:
+           * 1) convert waypoints to car frame coordinates
+           * 2) fit polynomial to target waypoints
+           * 3) predict state of car after delay
+           * 4) solve for optimal control inputs
+           * 5) apply control
+           */
+
           double steer_value;
           double throttle_value;
+
+          // 1. Convert to car frame
+          size_t N_WAYPOINTS = ptsx.size();
+          // To store points in car frame
+          VectorXd waypoints_xs(N_WAYPOINTS);
+          VectorXd waypoints_ys(N_WAYPOINTS);
+          for (int i = 0; i < N_WAYPOINTS; ++i) {
+            // Affine transform: center and multiply by rotation matrix
+            // Center point around current position of car
+            double px_centered = ptsx[i] - px;
+            double py_centered = ptsy[i] - py;
+            // Multiply by rotation matrix
+            waypoints_xs[i] = px_centered * cos(-psi) - py_centered * sin(-psi);
+            waypoints_ys[i] = px_centered * sin(-psi) + py_centered * cos(-psi);
+          }
+
+          // 2. Fit polynomial to target waypoints
+          auto target_coeffs = polyfit(waypoints_xs, waypoints_ys, 3);
+
+          // 2.5 Retreive cross-track error and error of orientation
+          const double cte = target_coeffs[0]; // f(0)
+          const double psi_err = -atan(target_coeffs[1]); // -f'(0)
+
+          // 3. Predict state of car affected by control delay
+          // Kinematic model is used to predict vehicle state at the actual
+          // moment of control (current time + delay dt)
+          const double px_delay = v * DELAY_SECONDS;
+          const double py_delay = 0;
+          const double psi_delay = - v * steering_angle * DELAY_SECONDS / LF;
+          const double v_delay = v + throttle * DELAY_SECONDS;
+          const double cte_delat = cte + v * sin(psi_err) * DELAY_SECONDS;
+          const double psi_err_delay = psi_err + psi_delay;
+          VectorXd delayed_state(6);
+          delayed_state << px_delay, py_delay, psi_delay, v_delay, cte_delat, psi_err_delay;
+
+          // 4. Solve for optimal control inputs
+          vector<double> optimal_control = mpc.Solve(delayed_state, target_coeffs);
+
+          // 5. Apply control (flip steering angle)
+          steer_value =  - optimal_control[0] / STEERING_MAX_LIMIT; // normalized to [-1, 1]
+          throttle_value = optimal_control[1];
+
+
+// ======================== MY IMPLEMENTATION | END ======================== //
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
@@ -139,7 +217,7 @@ int main() {
           //
           // NOTE: REMEMBER TO SET THIS TO 100 MILLISECONDS BEFORE
           // SUBMITTING.
-          this_thread::sleep_for(chrono::milliseconds(100));
+          this_thread::sleep_for(chrono::milliseconds(DELAY_MILLISECONDS));
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }
       } else {

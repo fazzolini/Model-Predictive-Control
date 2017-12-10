@@ -9,8 +9,8 @@ using CppAD::AD;
 
 // ======================= MY IMPLEMENTATION | START ======================= //
 
-// T = 30 * 0.1 = 3 seconds (can tune up later)
-size_t N_TIME_STEPS = 30; // unsigned integer
+// T = 10 * 0.1 = 1 seconds (can tune up later)
+size_t N_TIME_STEPS = 10; // unsigned integer
 double dt = 0.1;
 // For setting numeric limits
 // https://www.npr.org/sections/krulwich/2012/09/17/161096233/which-is-greater-the-number-of-sand-grains-on-earth-or-stars-in-the-sky
