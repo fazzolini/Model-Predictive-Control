@@ -179,11 +179,12 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
 
 // ======================== MY IMPLEMENTATION | END ======================== //
 
-  // TODO: Set the number of constraints
+  // TODO: Set the number of constraints [DONE]
 
 // ======================= MY IMPLEMENTATION | START ======================= //
 
-  size_t n_constraints = 0;
+  // One constraint for each state variable
+  size_t n_constraints = N_STATE_VARS * N_TIME_STEPS;
 
 // ======================== MY IMPLEMENTATION | END ======================== //
 
