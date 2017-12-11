@@ -307,7 +307,13 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
 
 // ======================= MY IMPLEMENTATION | START ======================= //
 
-  auto result = {solution.x[delta_start_idx], solution.x[a_start_idx]};
+  vector<double> result = {solution.x[delta_start_idx], solution.x[a_start_idx]};
+  for (int m = 0; m < N_TIME_STEPS; ++m) {
+    result.push_back(solution.x[2 + m]);
+  }
+  for (int n = 0; n < N_TIME_STEPS; ++n) {
+    result.push_back(solution.x[2 + N_TIME_STEPS + n]);
+  }
   return result;
 
 // ======================== MY IMPLEMENTATION | END ======================== //
