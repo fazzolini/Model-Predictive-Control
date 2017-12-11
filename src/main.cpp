@@ -25,8 +25,9 @@ double rad2deg(double x) { return x * 180 / pi(); }
 // To avoid recalculating each time
 const double STEERING_MAX_LIMIT = 0.436332;
 // Delay
-const size_t DELAY_MILLISECONDS = 100;
-const double DELAY_SECONDS = static_cast<double>(DELAY_MILLISECONDS) / 1000.0;
+const size_t DELAY_MILLISECONDS = 0;
+const double DELAY_SECONDS = 0.0;
+//const double DELAY_SECONDS = static_cast<double>(DELAY_MILLISECONDS) / 1000.0;
 // This is the length from front to CoG that has a similar radius.
 const double LF = 2.67;
 
@@ -140,14 +141,18 @@ int main() {
           // To store points in car frame
           VectorXd waypoints_xs(N_WAYPOINTS);
           VectorXd waypoints_ys(N_WAYPOINTS);
+          // Pre compute sine and cosine of psi
+          const double cospsi = cos(-psi);
+          const double sinpsi = sin(-psi);
+          // Calculate coods relative to car frame
           for (int i = 0; i < N_WAYPOINTS; ++i) {
             // Affine transform: center and multiply by rotation matrix
             // Center point around current position of car
-            double px_centered = ptsx[i] - px;
-            double py_centered = ptsy[i] - py;
+            const double px_centered = ptsx[i] - px;
+            const double py_centered = ptsy[i] - py;
             // Multiply by rotation matrix
-            waypoints_xs[i] = px_centered * cos(-psi) - py_centered * sin(-psi);
-            waypoints_ys[i] = px_centered * sin(-psi) + py_centered * cos(-psi);
+            waypoints_xs[i] = px_centered * cospsi - py_centered * sinpsi;
+            waypoints_ys[i] = px_centered * sinpsi + py_centered * cospsi;
           }
 
           // 2. Fit polynomial to target waypoints
@@ -194,7 +199,13 @@ int main() {
 
 // ======================= MY IMPLEMENTATION | START ======================= //
 
-          // TODO: Create vectors with predicted trajectory coordinates
+          const size_t num_points = 10;
+
+          // TODO: Create vectors with predicted trajectory coordinates [DONE]
+          for (int l = 0; l < num_points; ++l) {
+            mpc_x_vals.push_back(optimal_control[2 + l]);
+            mpc_y_vals.push_back(optimal_control[2 + num_points + l]);
+          }
 
 // ======================== MY IMPLEMENTATION | END ======================== //
 
@@ -210,7 +221,12 @@ int main() {
 
 // ======================= MY IMPLEMENTATION | START ======================= //
 
-          // TODO: Create vectors with target trajectory coordinates
+          // TODO: Create vectors with target trajectory coordinates [DONE]
+          // They are already calculated, just copy values
+          for (int k = 0; k < N_WAYPOINTS; ++k) {
+            next_x_vals.push_back(waypoints_xs[k]);
+            next_y_vals.push_back(waypoints_ys[k]);
+          }
 
 // ======================== MY IMPLEMENTATION | END ======================== //
 
