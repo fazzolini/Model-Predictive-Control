@@ -3,6 +3,39 @@ Self-Driving Car Engineer Nanodegree Program
 
 ---
 
+## Project Writeup
+
+### Introduction
+
+A general self-driving car framework has 4 steps:
+
+1. perception
+2. localization and mapping
+3. path planning
+4. control
+
+In this project I implement the last step.
+
+### The model
+
+Since we are implementing the last step, we assume that we already have planned path at our hands. Indeed, the simulator API provides that data in variables `ptsx` and `ptsy` (in global coordinates). We can also retrieve some telemetry about the car: position (in global coordinates), velocity and orientation, as well as control inputs values.
+
+The goal of the model: given all data described above, calculate and apply control inputs: steering and throttle.
+
+### Timestep Length and Elapsed Duration
+
+There were 2 considerations for choosing `N` and `dt`. The first one was addressed in the lesson. It was said that `N * dt` should be couple of seconds at most, because in real world driving road conditions can change drastically in a matter of a second and therefore optimizing the path for longer than that has no practical applications.
+
+Secondly, due to the fact that my laptop doesn't have a pwerful processor, choosing values too large might affect simulation performance.
+
+I tried different combinations and found that `N=10` and `dt=10` works well.
+
+### Polynomial Fitting and MPC Preprocessing
+
+### Model Predictive Control with Latency
+
+---
+
 ## Dependencies
 
 * cmake >= 3.5
