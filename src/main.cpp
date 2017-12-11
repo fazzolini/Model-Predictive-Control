@@ -25,8 +25,8 @@ double rad2deg(double x) { return x * 180 / pi(); }
 // To avoid recalculating each time
 const double STEERING_MAX_LIMIT = 0.436332;
 // Delay
-const size_t DELAY_MILLISECONDS = 0;
-const double DELAY_SECONDS = 0.0;
+const size_t DELAY_MILLISECONDS = 100;
+const double DELAY_SECONDS = 0.1;
 //const double DELAY_SECONDS = static_cast<double>(DELAY_MILLISECONDS) / 1000.0;
 // This is the length from front to CoG that has a similar radius.
 const double LF = 2.67;
@@ -169,10 +169,10 @@ int main() {
           const double py_delay = 0;
           const double psi_delay = - v * steering_angle * DELAY_SECONDS / LF;
           const double v_delay = v + throttle * DELAY_SECONDS;
-          const double cte_delat = cte + v * sin(psi_err) * DELAY_SECONDS;
+          const double cte_delay = cte + v * sin(psi_err) * DELAY_SECONDS;
           const double psi_err_delay = psi_err + psi_delay;
           VectorXd delayed_state(6);
-          delayed_state << px_delay, py_delay, psi_delay, v_delay, cte_delat, psi_err_delay;
+          delayed_state << px_delay, py_delay, psi_delay, v_delay, cte_delay, psi_err_delay;
 
           // 4. Solve for optimal control inputs
           vector<double> optimal_control = mpc.Solve(delayed_state, target_coeffs);

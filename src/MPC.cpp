@@ -77,23 +77,23 @@ class FG_eval {
     // The part of the cost based on the reference state
     for (int t = 0; t < N_TIME_STEPS; t++) {
       // Penalize for cross-track error
-      fg[0] += CppAD::pow(vars[cte_start_idx + t], 2);
+      fg[0] += 10 * CppAD::pow(vars[cte_start_idx + t], 2);
       // Penalize for orientation angle
-      fg[0] += CppAD::pow(vars[psi_err_start_idx + t], 2);
+      fg[0] += 1 * CppAD::pow(vars[psi_err_start_idx + t], 2);
       // Penalize for stopping or driving too fast
       fg[0] += CppAD::pow(vars[v_start_idx + t] - ref_v, 2);
     }
 
     // Minimize the use of steering and throttle / brake
     for (int t = 0; t < N_TIME_STEPS - 1; t++) {
-      fg[0] += CppAD::pow(vars[delta_start_idx + t], 2);
-      fg[0] += CppAD::pow(vars[a_start_idx + t], 2);
+      fg[0] += 1000 * CppAD::pow(vars[delta_start_idx + t], 2);
+      fg[0] += 10 * CppAD::pow(vars[a_start_idx + t], 2);
     }
 
     // Minimize fast changing of steering and throttle / brake
     for (int t = 0; t < N_TIME_STEPS - 2; t++) {
-      fg[0] += CppAD::pow(vars[delta_start_idx + t + 1] - vars[delta_start_idx + t], 2);
-      fg[0] += CppAD::pow(vars[a_start_idx + t + 1] - vars[a_start_idx + t], 2);
+      fg[0] += 1 * CppAD::pow(vars[delta_start_idx + t + 1] - vars[delta_start_idx + t], 2);
+      fg[0] += 1 * CppAD::pow(vars[a_start_idx + t + 1] - vars[a_start_idx + t], 2);
     }
     // ------ Calculate cost | end ------ //
 
