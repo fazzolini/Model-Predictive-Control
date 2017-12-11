@@ -199,7 +199,13 @@ int main() {
 
 // ======================= MY IMPLEMENTATION | START ======================= //
 
-          // TODO: Create vectors with predicted trajectory coordinates
+          const size_t num_points = 10;
+
+          // TODO: Create vectors with predicted trajectory coordinates [DONE]
+          for (int l = 0; l < num_points; ++l) {
+            mpc_x_vals.push_back(optimal_control[2 + l]);
+            mpc_y_vals.push_back(optimal_control[2 + num_points + l]);
+          }
 
 // ======================== MY IMPLEMENTATION | END ======================== //
 
@@ -215,7 +221,7 @@ int main() {
 
 // ======================= MY IMPLEMENTATION | START ======================= //
 
-          // TODO: Create vectors with target trajectory coordinates
+          // TODO: Create vectors with target trajectory coordinates [DONE]
           // They are already calculated, just copy values
           for (int k = 0; k < N_WAYPOINTS; ++k) {
             next_x_vals.push_back(waypoints_xs[k]);
