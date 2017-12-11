@@ -192,6 +192,12 @@ int main() {
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
 
+// ======================= MY IMPLEMENTATION | START ======================= //
+
+          // TODO: Create vectors with predicted trajectory coordinates
+
+// ======================== MY IMPLEMENTATION | END ======================== //
+
           msgJson["mpc_x"] = mpc_x_vals;
           msgJson["mpc_y"] = mpc_y_vals;
 
@@ -201,6 +207,12 @@ int main() {
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
+
+// ======================= MY IMPLEMENTATION | START ======================= //
+
+          // TODO: Create vectors with target trajectory coordinates
+
+// ======================== MY IMPLEMENTATION | END ======================== //
 
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
