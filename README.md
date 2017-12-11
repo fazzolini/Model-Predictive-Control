@@ -20,7 +20,29 @@ In this project I implement the last step.
 
 Since we are implementing the last step, we assume that we already have planned path at our hands. Indeed, the simulator API provides that data in variables `ptsx` and `ptsy` (in global coordinates). We can also retrieve some telemetry about the car: position (in global coordinates), velocity and orientation, as well as control inputs values.
 
-The goal of the model: given all data described above, calculate and apply control inputs: steering and throttle.
+The goal of the model: given all data described above, calculate and apply optimal control inputs: steering and throttle.
+
+Hence, the solution is as follows:
+
+#### 1. Convert waypoints to car frame coordinates
+
+This is a simple linear algebra problem. We need to apply affine transform: shift and then rotate. This is implemented in `main.cpp` in lines `139-156`. Attention point is using a negative value of orientation vector, because we are transferring to car coordinate system. I did this already in particle filter implementation.
+
+#### 2. Fit polynomial to target waypoints
+
+Then we will fit the third degree polynomial. We will get three coefficients that will be used in MPC controller. This is implemented online `159`.
+
+#### 3. Predict state of car after delay
+
+In this part we use kinematic model equations to predict where the car is going to be after delay. The equations easily followed if we know that a time zero the position of the car has `x` coordinate of zero and also assuming currently applied control inputs stay constant for the duration of delay. This functionality is implemented at lines `165-175` of `main.cpp`.
+
+#### 4. Solve for optimal control inputs
+
+In this step we will use predicted position of the car after delay as well as fitted polynomial coefficients. We pass this to the MPC solver and get as result a vector of optimal controls as well as predicted position of the car for optimal path. Implementation is at line `178` of file `main.cpp`.
+
+#### 5. Apply control
+
+Then we pass to API calculated values off steering and throttle. Attention should be paid to using the negative value of calculated steering angle. Implementation is at lines `180-182` of file `main.cpp`.
 
 ### Timestep Length and Elapsed Duration
 
@@ -30,9 +52,11 @@ Secondly, due to the fact that my laptop doesn't have a pwerful processor, choos
 
 I tried different combinations and found that `N=10` and `dt=10` works well.
 
-### Polynomial Fitting and MPC Preprocessing
-
 ### Model Predictive Control with Latency
+
+At first the model did not work. I couldn't understand why the yellow line was shaking so much during simulation. I spent quite some time trying to figure out what the problem was. The problem was that cost function coefficients were too small. Car was steering too much and too fast, and as result yellow line was shaking.
+
+I increased penalty coefficients for steering angle as well as speed. This resulted in simulation behaving much better. Penalty weights can be seen at lines `77-90` of file `MPC.cpp`.
 
 ---
 
